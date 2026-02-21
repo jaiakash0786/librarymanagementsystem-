@@ -12,74 +12,115 @@ function Books() {
   });
   const [editingId, setEditingId] = useState(null);
 
-  // Load Books
+  // 🔐 Set Token Automatically for All Requests
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login first");
+      window.location.href = "/login";
+    }
+
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  }, []);
+
+  // 📚 Load Books (with search)
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {
-      const res = await axios.get(
-        `http://localhost:5000/api/books${search ? `?search=${search}` : ""
-        }`
-      );
-      setBooks(res.data);
+      try {
+        const res = await axios.get(
+          `http://localhost:5000/api/books${
+            search ? `?search=${search}` : ""
+          }`
+        );
+        setBooks(res.data);
+      } catch (error) {
+        console.log(error.response?.data?.message);
+      }
     }, 400);
 
     return () => clearTimeout(delayDebounce);
   }, [search]);
 
+  // Fetch Books
   const fetchBooks = async () => {
-    const res = await axios.get("http://localhost:5000/api/books");
-    setBooks(res.data);
+    try {
+      const res = await axios.get("http://localhost:5000/api/books");
+      setBooks(res.data);
+    } catch (error) {
+      console.log(error.response?.data?.message);
+    }
   };
 
-  // Handle Input
+  // Handle Input Change
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
   };
-
-  // Add / Update Book
+  const handleLogout = () => {
+  localStorage.removeItem("token");
+  window.location.reload();
+};
+  // Add or Update Book
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (editingId) {
-      await axios.put(
-        `http://localhost:5000/api/books/${editingId}`,
-        formData
-      );
-      setEditingId(null);
-    } else {
-      await axios.post(
-        "http://localhost:5000/api/books",
-        formData
-      );
+    try {
+      if (editingId) {
+        await axios.put(
+          `http://localhost:5000/api/books/${editingId}`,
+          formData
+        );
+        setEditingId(null);
+      } else {
+        await axios.post(
+          "http://localhost:5000/api/books",
+          formData
+        );
+      }
+
+      setFormData({
+        title: "",
+        author: "",
+        isbn: "",
+        quantity: ""
+      });
+
+      fetchBooks();
+
+    } catch (error) {
+      console.log(error.response?.data?.message);
     }
-
-    setFormData({
-      title: "",
-      author: "",
-      isbn: "",
-      quantity: ""
-    });
-
-    fetchBooks();
   };
 
   // Delete Book
   const handleDelete = async (id) => {
-    await axios.delete(`http://localhost:5000/api/books/${id}`);
-    fetchBooks();
+    try {
+      await axios.delete(`http://localhost:5000/api/books/${id}`);
+      fetchBooks();
+    } catch (error) {
+      console.log(error.response?.data?.message);
+    }
   };
 
   // Edit Book
   const handleEdit = (book) => {
-    setFormData(book);
+    setFormData({
+      title: book.title,
+      author: book.author,
+      isbn: book.isbn,
+      quantity: book.quantity
+    });
     setEditingId(book._id);
   };
 
   return (
-    <div>
+    <div style={{ padding: "20px" }}>
+      <button onClick={handleLogout}>Logout</button>
       <h2>Library Books</h2>
+
       <input
         type="text"
         placeholder="Search by title, author, isbn..."
@@ -87,11 +128,37 @@ function Books() {
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      <form onSubmit={handleSubmit}>
-        <input name="title" placeholder="Title" value={formData.title} onChange={handleChange} required />
-        <input name="author" placeholder="Author" value={formData.author} onChange={handleChange} required />
-        <input name="isbn" placeholder="ISBN" value={formData.isbn} onChange={handleChange} required />
-        <input name="quantity" type="number" placeholder="Quantity" value={formData.quantity} onChange={handleChange} required />
+      <form onSubmit={handleSubmit} style={{ marginTop: "20px" }}>
+        <input
+          name="title"
+          placeholder="Title"
+          value={formData.title}
+          onChange={handleChange}
+          required
+        />
+        <input
+          name="author"
+          placeholder="Author"
+          value={formData.author}
+          onChange={handleChange}
+          required
+        />
+        <input
+          name="isbn"
+          placeholder="ISBN"
+          value={formData.isbn}
+          onChange={handleChange}
+          required
+        />
+        <input
+          name="quantity"
+          type="number"
+          placeholder="Quantity"
+          value={formData.quantity}
+          onChange={handleChange}
+          required
+        />
+
         <button type="submit">
           {editingId ? "Update" : "Add"}
         </button>
@@ -102,11 +169,13 @@ function Books() {
       {books.map((book) => (
         <div key={book._id}>
           <h4>{book.title}</h4>
-          <p>{book.author}</p>
-          <p>{book.quantity}</p>
-          <p>{book.isbn}</p>
+          <p>Author: {book.author}</p>
+          <p>Quantity: {book.quantity}</p>
+          <p>ISBN: {book.isbn}</p>
+
           <button onClick={() => handleEdit(book)}>Edit</button>
           <button onClick={() => handleDelete(book._id)}>Delete</button>
+
           <hr />
         </div>
       ))}

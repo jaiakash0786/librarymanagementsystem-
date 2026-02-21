@@ -7,9 +7,12 @@ const {
   deleteBook,
 } = require("../controllers/bookController");
 
-router.post("/", addBook);
+const protect = require("../middleware/authMiddleware");
+
+router.post("/", protect, addBook);
+router.put("/:id", protect, updateBook);
+router.delete("/:id", protect, deleteBook);
 router.get("/", getBooks);
-router.put("/:id", updateBook);
-router.delete("/:id", deleteBook);
+
 
 module.exports = router;
