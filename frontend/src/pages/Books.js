@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-
-function Books() {
+import Navbar from "../components/Navbar";
+function Books({onLogout}) {
   const [books, setBooks] = useState([]);
   const [search, setSearch] = useState("");
   const [formData, setFormData] = useState({
@@ -117,8 +117,10 @@ function Books() {
   };
 
   return (
+    
     <div style={{ padding: "20px" }}>
-      <button onClick={handleLogout}>Logout</button>
+      <Navbar onLogout={onLogout} />
+      
       <h2>Library Books</h2>
 
       <input
