@@ -4,6 +4,8 @@ require("dotenv").config();
 
 const connectDB = require("./config/db");
 const bookRoutes = require("./routes/bookRoutes");
+const authRoutes = require("./routes/authRoutes");
+const issueRoutes = require("./routes/issueRoutes");
 
 const app = express();
 
@@ -17,6 +19,9 @@ app.use(express.json());
 // routes
 app.use("/api/books", bookRoutes);
 
+app.use("/api/issues", issueRoutes);
+
+app.use("/api/auth", authRoutes);
 app.get("/", (req, res) => {
   res.send("Library Management Backend Running");
 });
