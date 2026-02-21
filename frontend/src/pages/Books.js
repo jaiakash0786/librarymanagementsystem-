@@ -1,27 +1,36 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "../styles/Books.css";
 
 function Books() {
   const [books, setBooks] = useState([]);
-  const [editingId, setEditingId] = useState(null);
-
+  const [search, setSearch] = useState("");
   const [formData, setFormData] = useState({
     title: "",
     author: "",
     isbn: "",
     quantity: ""
   });
+  const [editingId, setEditingId] = useState(null);
 
+  // Load Books
   useEffect(() => {
-    fetchBooks();
-  }, []);
+    const delayDebounce = setTimeout(async () => {
+      const res = await axios.get(
+        `http://localhost:5000/api/books${search ? `?search=${search}` : ""
+        }`
+      );
+      setBooks(res.data);
+    }, 400);
+
+    return () => clearTimeout(delayDebounce);
+  }, [search]);
 
   const fetchBooks = async () => {
     const res = await axios.get("http://localhost:5000/api/books");
     setBooks(res.data);
   };
 
+  // Handle Input
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -29,19 +38,21 @@ function Books() {
     });
   };
 
+  // Add / Update Book
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (editingId) {
-      // UPDATE
       await axios.put(
         `http://localhost:5000/api/books/${editingId}`,
         formData
       );
       setEditingId(null);
     } else {
-      // ADD
-      await axios.post("http://localhost:5000/api/books", formData);
+      await axios.post(
+        "http://localhost:5000/api/books",
+        formData
+      );
     }
 
     setFormData({
@@ -54,91 +65,51 @@ function Books() {
     fetchBooks();
   };
 
+  // Delete Book
   const handleDelete = async (id) => {
     await axios.delete(`http://localhost:5000/api/books/${id}`);
     fetchBooks();
   };
 
+  // Edit Book
   const handleEdit = (book) => {
-    setFormData({
-      title: book.title,
-      author: book.author,
-      isbn: book.isbn,
-      quantity: book.quantity
-    });
+    setFormData(book);
     setEditingId(book._id);
   };
 
   return (
     <div>
-      <form className="book-form" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="title"
-          placeholder="Book Title"
-          value={formData.title}
-          onChange={handleChange}
-          required
-        />
+      <h2>Library Books</h2>
+      <input
+        type="text"
+        placeholder="Search by title, author, isbn..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
 
-        <input
-          type="text"
-          name="author"
-          placeholder="Author"
-          value={formData.author}
-          onChange={handleChange}
-          required
-        />
-
-        <input
-          type="text"
-          name="isbn"
-          placeholder="ISBN"
-          value={formData.isbn}
-          onChange={handleChange}
-          required
-        />
-
-        <input
-          type="number"
-          name="quantity"
-          placeholder="Quantity"
-          value={formData.quantity}
-          onChange={handleChange}
-          required
-        />
-
+      <form onSubmit={handleSubmit}>
+        <input name="title" placeholder="Title" value={formData.title} onChange={handleChange} required />
+        <input name="author" placeholder="Author" value={formData.author} onChange={handleChange} required />
+        <input name="isbn" placeholder="ISBN" value={formData.isbn} onChange={handleChange} required />
+        <input name="quantity" type="number" placeholder="Quantity" value={formData.quantity} onChange={handleChange} required />
         <button type="submit">
-          {editingId ? "Update Book" : "Add Book"}
+          {editingId ? "Update" : "Add"}
         </button>
       </form>
 
-      <div className="books-container">
-        {books.map((book) => (
-          <div className="book-card" key={book._id}>
-            <h3>{book.title}</h3>
-            <p><strong>Author:</strong> {book.author}</p>
-            <p><strong>ISBN:</strong> {book.isbn}</p>
-            <p><strong>Quantity:</strong> {book.quantity}</p>
+      <hr />
 
-            <div className="btn-group">
-              <button
-                className="edit-btn"
-                onClick={() => handleEdit(book)}
-              >
-                Edit
-              </button>
-
-              <button
-                className="delete-btn"
-                onClick={() => handleDelete(book._id)}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      {books.map((book) => (
+        <div key={book._id}>
+          <h4>{book.title}</h4>
+          <p>{book.author}</p>
+          <p>{book.quantity}</p>
+          <p>{book.isbn}</p>
+          <button onClick={() => handleEdit(book)}>Edit</button>
+          <button onClick={() => handleDelete(book._id)}>Delete</button>
+          <hr />
+        </div>
+      ))}
     </div>
   );
 }

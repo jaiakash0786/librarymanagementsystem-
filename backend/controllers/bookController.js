@@ -13,7 +13,21 @@ exports.addBook = async (req, res) => {
 // Get All Books
 exports.getBooks = async (req, res) => {
   try {
-    const books = await Book.find();
+    const search = req.query.search;
+
+    let filter = {};
+
+    if (search) {
+      filter = {
+        $or: [
+          { title: { $regex: search, $options: "i" } },
+          { author: { $regex: search, $options: "i" } },
+          { isbn: { $regex: search, $options: "i" } }
+        ]
+      };
+    }
+
+    const books = await Book.find(filter);
     res.json(books);
   } catch (error) {
     res.status(500).json({ message: error.message });
