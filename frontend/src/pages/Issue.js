@@ -3,12 +3,16 @@ import axios from "axios";
 import Navbar from "../components/Navbar";
 import { Btn, Badge, FormGroup, Card } from "../components/UI";
 
+const API = process.env.REACT_APP_API_URL;
+
 function Issue({ onLogout }) {
   const [books, setBooks] = useState([]);
   const [issues, setIssues] = useState([]);
   const [studentId, setStudentId] = useState("");
   const [bookId, setBookId] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [issueError, setIssueError] = useState("");
+  const [returnError, setReturnError] = useState("");
 
   const token = localStorage.getItem("token");
 
@@ -18,57 +22,90 @@ function Issue({ onLogout }) {
   }, []);
 
   const fetchBooks = async () => {
-    const res = await axios.get("http://localhost:5000/api/books");
-    setBooks(res.data);
+    try {
+      const res = await axios.get(`${API}/api/books`);
+      setBooks(res.data);
+    } catch (error) {
+      console.log("Failed to fetch books:", error.response?.data?.message);
+    }
   };
 
   const fetchIssues = async () => {
-    const res = await axios.get("http://localhost:5000/api/issues");
-    setIssues(res.data);
+    try {
+      const res = await axios.get(`${API}/api/issues`);
+      setIssues(res.data);
+    } catch (error) {
+      console.log("Failed to fetch issues:", error.response?.data?.message);
+    }
   };
 
   const handleIssue = async (e) => {
     e.preventDefault();
+    setIssueError("");
 
-    await axios.post(
-      "http://localhost:5000/api/issues",
-      { studentId, bookId },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
+    try {
+      await axios.post(
+        `${API}/api/issues`,
+        { studentId, bookId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
-      }
-    );
+      );
 
-    setStudentId("");
-    setBookId("");
-    fetchBooks();
-    fetchIssues();
+      setStudentId("");
+      setBookId("");
+      fetchBooks();
+      fetchIssues();
+    } catch (error) {
+      setIssueError(
+        error.response?.data?.message || "Failed to issue book. Please try again."
+      );
+    }
   };
 
   const handleReturn = async (id) => {
-    await axios.put(
-      `http://localhost:5000/api/issues/return/${id}`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    );
+    setReturnError("");
 
-    fetchBooks();
-    fetchIssues();
+    try {
+      await axios.put(
+        `${API}/api/issues/return/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      fetchBooks();
+      fetchIssues();
+    } catch (error) {
+      setReturnError(
+        error.response?.data?.message || "Failed to return book. Please try again."
+      );
+    }
   };
 
   const filtered =
     activeTab === "all"
       ? issues
       : activeTab === "active"
-      ? issues.filter((i) => !i.returned)
-      : issues.filter((i) => i.returned);
+        ? issues.filter((i) => !i.returned)
+        : issues.filter((i) => i.returned);
 
   const activeCount = issues.filter((i) => !i.returned).length;
+
+  const errorStyle = {
+    background: "#fdeaea",
+    border: "1px solid #f5c0c0",
+    borderRadius: "var(--r-sm)",
+    padding: "10px 14px",
+    fontSize: ".85rem",
+    color: "var(--danger)",
+    marginBottom: 16
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
@@ -96,6 +133,10 @@ function Issue({ onLogout }) {
               >
                 Fill in the details to issue a book
               </p>
+
+              {issueError && (
+                <div style={errorStyle}>⚠ {issueError}</div>
+              )}
 
               <form onSubmit={handleIssue}>
                 <FormGroup label="Student ID">
@@ -194,6 +235,10 @@ function Issue({ onLogout }) {
                 ))}
               </div>
             </div>
+
+            {returnError && (
+              <div style={errorStyle}>⚠ {returnError}</div>
+            )}
 
             <Card animate>
               {filtered.length === 0 ? (

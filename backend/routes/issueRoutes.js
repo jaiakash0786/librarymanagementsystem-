@@ -6,8 +6,10 @@ const {
   getIssuedBooks
 } = require("../controllers/issueController");
 
-router.post("/", issueBook);
-router.put("/return/:id", returnBook);
+const protect = require("../middleware/authMiddleware");
+
+router.post("/", protect, issueBook);
+router.put("/return/:id", protect, returnBook);
 router.get("/", getIssuedBooks);
 
 module.exports = router;

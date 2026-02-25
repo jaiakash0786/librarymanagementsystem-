@@ -21,8 +21,7 @@ function Books({ onLogout }) {
   const fetchBooks = useCallback(async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/books${
-          search ? `?search=${search}` : ""
+        `${process.env.REACT_APP_API_URL}/api/books${search ? `?search=${search}` : ""
         }`
       );
       setBooks(res.data);
@@ -50,7 +49,7 @@ function Books({ onLogout }) {
     try {
       if (editingId) {
         await axios.put(
-          `http://localhost:5000/api/books/${editingId}`,
+          `${process.env.REACT_APP_API_URL}/api/books/${editingId}`,
           formData,
           {
             headers: {
@@ -60,7 +59,7 @@ function Books({ onLogout }) {
         );
       } else {
         await axios.post(
-          "http://localhost:5000/api/books",
+          `${process.env.REACT_APP_API_URL}/api/books`,
           formData,
           {
             headers: {
@@ -90,7 +89,7 @@ function Books({ onLogout }) {
   const handleDelete = async (id) => {
     try {
       await axios.delete(
-        `http://localhost:5000/api/books/${id}`,
+        `${process.env.REACT_APP_API_URL}/api/books/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -148,14 +147,14 @@ function Books({ onLogout }) {
           </div>
 
           <Btn onClick={() => {
-  if (showForm) {
-    handleCancel();   // If already open → close it
-  } else {
-    setShowForm(true);  // If closed → open it
-  }
-}}>
-  {showForm ? "Cancel" : "+ Add Book"}
-</Btn>
+            if (showForm) {
+              handleCancel();   // If already open → close it
+            } else {
+              setShowForm(true);  // If closed → open it
+            }
+          }}>
+            {showForm ? "Cancel" : "+ Add Book"}
+          </Btn>
         </div>
 
         {showForm && (

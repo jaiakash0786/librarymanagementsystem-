@@ -13,6 +13,8 @@ function Register() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleChange = (e) => {
     setFormData({
@@ -24,18 +26,30 @@ function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
+    setSuccess("");
+
+    // Client-side password validation
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters");
+      setLoading(false);
+      return;
+    }
 
     try {
       await axios.post(
-        "http://localhost:5000/api/auth/register",
+        `${process.env.REACT_APP_API_URL}/api/auth/register`,
         formData
       );
 
-      alert("Registered successfully!");
-      navigate("/login");
+      setSuccess("Account created successfully! Redirecting to login…");
 
-    } catch (error) {
-      alert("Registration failed");
+      setTimeout(() => {
+        navigate("/login");
+      }, 1800);
+
+    } catch (err) {
+      setError(err.response?.data?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -75,7 +89,6 @@ function Register() {
             justifyContent: "center"
           }}
         >
-          {/* IMAGE (Must be inside public folder) */}
           <img
             src="/register-illustration.svg"
             alt="Register"
@@ -130,6 +143,40 @@ function Register() {
             Fill in your details to get started
           </p>
 
+          {/* Error Message */}
+          {error && (
+            <div
+              style={{
+                background: "#fdeaea",
+                border: "1px solid #f5c0c0",
+                borderRadius: "var(--r-sm)",
+                padding: "10px 14px",
+                fontSize: ".85rem",
+                color: "var(--danger)",
+                marginBottom: 20
+              }}
+            >
+              ⚠ {error}
+            </div>
+          )}
+
+          {/* Success Message */}
+          {success && (
+            <div
+              style={{
+                background: "#e6f4ec",
+                border: "1px solid #a8d5b7",
+                borderRadius: "var(--r-sm)",
+                padding: "10px 14px",
+                fontSize: ".85rem",
+                color: "var(--success)",
+                marginBottom: 20
+              }}
+            >
+              ✓ {success}
+            </div>
+          )}
+
           <form onSubmit={handleRegister}>
             <FormGroup label="Full Name">
               <input
@@ -169,7 +216,7 @@ function Register() {
                 marginTop: 8
               }}
               size="lg"
-              disabled={loading}
+              disabled={loading || !!success}
             >
               {loading ? "Creating account…" : "Create Account →"}
             </Btn>
