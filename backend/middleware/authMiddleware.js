@@ -10,7 +10,7 @@ const protect = (req, res, next) => {
   const token = authHeader.split(" ")[1];
 
   try {
-    jwt.verify(token, "secretkey");
+    jwt.verify(token, process.env.JWT_SECRET);
     next();
   } catch (error) {
     res.status(401).json({ message: "Not authorized" });

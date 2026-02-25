@@ -6,6 +6,7 @@ import {
   Navigate
 } from "react-router-dom";
 
+import { GlobalStyle } from "./components/UI";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Books from "./pages/Books";
@@ -25,29 +26,58 @@ function App() {
   };
 
   return (
-    <Router>
-      <Routes>
-        <Route
-          path="/"
-          element={token ? <Books onLogout={handleLogout} /> : <Navigate to="/login" />}
-        />
+    <>
+      {/* ✅ Global Styling Applied Here */}
+      <GlobalStyle />
 
-        <Route
-          path="/issue"
-          element={token ? <Issue onLogout={handleLogout} /> : <Navigate to="/login" />}
-        />
+      <Router>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              token ? (
+                <Books onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
 
-        <Route
-          path="/login"
-          element={!token ? <Login onLogin={handleLogin} /> : <Navigate to="/" />}
-        />
+          <Route
+            path="/issue"
+            element={
+              token ? (
+                <Issue onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
 
-        <Route
-          path="/register"
-          element={!token ? <Register /> : <Navigate to="/" />}
-        />
-      </Routes>
-    </Router>
+          <Route
+            path="/login"
+            element={
+              !token ? (
+                <Login onLogin={handleLogin} />
+              ) : (
+                <Navigate to="/" />
+              )
+            }
+          />
+
+          <Route
+            path="/register"
+            element={
+              !token ? (
+                <Register />
+              ) : (
+                <Navigate to="/" />
+              )
+            }
+          />
+        </Routes>
+      </Router>
+    </>
   );
 }
 
